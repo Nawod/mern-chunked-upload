@@ -4,7 +4,7 @@ import cors from "cors";
 import fs from "fs";
 import md5 from "md5";
 
-const chunkSize = 10240;
+const chunkSize = 6000000;
 const app = express();
 app.use(bodyParser.raw({ type: "application/octet-stream", limit: "100mb" }));
 app.use(

@@ -5,8 +5,8 @@ import Worker from "./Worker";
 import WorkerBuilder from "./worker-builder";
 
 function App() {
-  // const chunkSize = 6000000;
-  const chunkSize = 50120;
+  const chunkSize = 6000000;
+  // const chunkSize = 50120;
   const projectId = 1234;
   const [files, setFiles] = useState([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(null);
