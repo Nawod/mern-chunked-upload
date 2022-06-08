@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.scss";
-import Worker from "./Worker";
-import WorkerBuilder from "./worker-builder";
 
 function App() {
   const chunkSize = 6000000;
   // const chunkSize = 50120;
+
   const projectId = 1234;
   const [files, setFiles] = useState([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(null);
@@ -16,22 +15,6 @@ function App() {
   const [detail, setDetail] = useState("");
   const [btnTitle, setBtnTitle] = useState("Upload");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  // const worker = new WorkerBuilder(Worker);
-
-  // useEffect(() => {
-  //   worker.onmessage = (e) => {
-  //     console.log("from worker : ", e);
-  //   };
-  // }, []);
-
-  // const handleWorker = () => {
-  //   worker.postMessage({
-  //     files: files,
-  //     currentFileIndex: currentFileIndex,
-  //     projectId: projectId,
-  //   });
-  // };
 
   //upload request
   const requestNewUpload = () => {
@@ -120,6 +103,12 @@ function App() {
       })
       .catch((error) => {
         console.log("error : ", error);
+        setDetail("Network Error!");
+        setTimeout(() => {
+          setDetail("Network Error! Try to Reconnect...");
+          console.log("Try to reconnect!");
+          requestNewUpload();
+        }, 3000);
       });
   };
 
@@ -175,7 +164,6 @@ function App() {
         setBtnTitle("Pause");
       }
     }
-    // handleWorker();
   };
 
   //get user's online statues
