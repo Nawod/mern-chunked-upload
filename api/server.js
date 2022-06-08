@@ -5,11 +5,14 @@ import fs from "fs";
 import md5 from "md5";
 
 const chunkSize = 6000000;
+// const chunkSize = 50120;
+const fileList = [];
 const app = express();
 app.use(bodyParser.raw({ type: "application/octet-stream", limit: "100mb" }));
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://104.154.225.244:4002",
+    // origin: "http://localhost:3001",
   })
 );
 app.use("/uploads", express.static("uploads"));
@@ -78,5 +81,7 @@ app.post("/upload", (req, res) => {
   }
 });
 
+
 app.listen(4001);
 console.log("server listen to port 4001");
+
