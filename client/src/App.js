@@ -17,8 +17,9 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   //upload request
-  const requestNewUpload = () => {
-    const file = files[currentFileIndex];
+  const requestNewUpload = (index) => {
+    const fileIndex = index;
+    const file = files[fileIndex];
 
     const params = new URLSearchParams();
     params.set("name", file.name);
@@ -33,47 +34,64 @@ function App() {
       .then((res) => {
         console.log("from upload request", res.data);
         const fileId = res.data.fileId;
-        const totalChunks = Math.ceil(files[currentFileIndex].size / chunkSize);
+        const totalChunks = Math.ceil(files[fileIndex].size / chunkSize);
         const existedChunks = res.data.existedChunks;
         if (res.data.exists) {
           console.log("file already exists!", totalChunks);
           setDetail("file already exists! Uploaded Chunks :" + existedChunks);
           if (totalChunks === existedChunks) {
             file.completed = true;
-            console.log(currentFileIndex, " - Uploaded");
-            setLastUploadedFileIndex(currentFileIndex);
+            console.log(fileIndex, " - Existed");
+            setLastUploadedFileIndex(fileIndex);
             setCurrentChunkIndex(null);
+
+            if (fileIndex < files.length - 1 && isUploading) {
+              console.log("Trigerd from request:", fileIndex + 1);
+              requestNewUpload(fileIndex + 1);
+            }
           } else {
             // setCurrentChunkIndex(existedChunks);
-            readAndUploadCurrentChunk(fileId, existedChunks);
+            readAndUploadCurrentChunk(fileId, existedChunks, fileIndex);
           }
         } else {
-          readAndUploadCurrentChunk(fileId, existedChunks);
+          readAndUploadCurrentChunk(fileId, existedChunks, fileIndex);
         }
       })
       .catch((error) => {
-        console.log("error : ", error);
+        console.log("error from upload request: ", error);
+        setDetail("Network Error!");
+        setTimeout(() => {
+          setDetail("Network Error! Try to Reconnect...");
+          console.log("Try to reconnect from request!");
+          requestNewUpload(fileIndex);
+        }, 3000);
       });
   };
 
   //split the select file into chunks
-  const readAndUploadCurrentChunk = (fileId, existedChunks) => {
-    const reader = new FileReader();
-    const file = files[currentFileIndex];
-    if (!file) {
-      return;
-    }
+  const readAndUploadCurrentChunk = (fileId, existedChunks, index) => {
+    console.log("triggered", isUploading);
+    if (isUploading) {
+      const fileIndex = index;
+      const reader = new FileReader();
+      const file = files[fileIndex];
+      if (!file) {
+        return;
+      }
 
-    const from = existedChunks * chunkSize;
-    const to = from + chunkSize;
-    const blob = file.slice(from, to);
-    reader.onload = (e) => uploadChunk(e, fileId, existedChunks);
-    reader.readAsDataURL(blob);
+      const from = existedChunks * chunkSize;
+      const to = from + chunkSize;
+      const blob = file.slice(from, to);
+      reader.onload = (e) => uploadChunk(e, fileId, existedChunks, fileIndex);
+      reader.readAsDataURL(blob);
+    }
   };
 
   //upload the chunk file
-  const uploadChunk = (readerEvent, fileId, existedChunks) => {
-    const file = files[currentFileIndex];
+  const uploadChunk = (readerEvent, fileId, existedChunks, index) => {
+    setDetail("file uploading! Uploaded Chunks :" + existedChunks);
+    const fileIndex = index;
+    const file = files[fileIndex];
     const data = readerEvent.target.result;
 
     const params = new URLSearchParams();
@@ -86,30 +104,42 @@ function App() {
     const headers = { "Content-Type": "application/octet-stream" };
     const url = "http://104.154.225.244:4001/upload?" + params.toString();
 
-    axios
-      .post(url, data, { headers })
-      .then((res) => {
-        console.log("from upload", res.data);
+    if (isUploading) {
+      axios
+        .post(url, data, { headers })
+        .then((res) => {
+          console.log("from upload", res.data);
 
-        if (res.data.completed) {
-          file.completed = true;
-          setDetail("File upload completed!");
-          console.log(currentFileIndex, " - Uploaded");
-          setLastUploadedFileIndex(currentFileIndex);
-          setCurrentChunkIndex(null);
-        } else {
-          setCurrentChunkIndex(existedChunks + 1);
-        }
-      })
-      .catch((error) => {
-        console.log("error : ", error);
-        setDetail("Network Error!");
-        setTimeout(() => {
-          setDetail("Network Error! Try to Reconnect...");
-          console.log("Try to reconnect!");
-          requestNewUpload();
-        }, 3000);
-      });
+          if (res.data.completed) {
+            file.completed = true;
+            setDetail("File upload completed!");
+            console.log(fileIndex, " - Uploaded");
+            setLastUploadedFileIndex(fileIndex);
+            setCurrentChunkIndex(null);
+
+            if (fileIndex < files.length - 1 && isUploading) {
+              console.log("Trigerd from upload :", fileIndex + 1);
+              requestNewUpload(fileIndex + 1);
+            }
+          } else {
+            setCurrentChunkIndex(existedChunks + 1);
+            readAndUploadCurrentChunk(
+              fileId,
+              res.data.existedChunks + 1,
+              fileIndex
+            );
+          }
+        })
+        .catch((error) => {
+          console.log("error from upload: ", error);
+          setDetail("Network Error!");
+          setTimeout(() => {
+            setDetail("Network Error! Try to Reconnect...");
+            console.log("Try to reconnect from upload!");
+            requestNewUpload(fileIndex);
+          }, 3000);
+        });
+    }
   };
 
   useEffect(() => {
@@ -119,7 +149,6 @@ function App() {
     const isLastFile = lastUploadedFileIndex === files.length - 1;
     const nextFileIndex = isLastFile ? null : currentFileIndex + 1;
     setIsUploading(isLastFile ? false : true);
-    setBtnTitle(isLastFile ? "Upload" : "Resume");
     setCurrentFileIndex(nextFileIndex);
   }, [lastUploadedFileIndex]);
 
@@ -138,33 +167,29 @@ function App() {
   useEffect(() => {
     if (currentFileIndex !== null) {
       setCurrentChunkIndex(0);
-      setBtnTitle("Upload");
     }
   }, [currentFileIndex]);
-
-  useEffect(() => {
-    if (isUploading && currentChunkIndex !== null) {
-      requestNewUpload();
-    }
-  }, [currentChunkIndex, isUploading]);
 
   //add selected files to the list
   const selectFiles = (e) => {
     setFiles([...files, ...e.target.files]);
   };
 
+  // trigered when the upload button click
   const uploadButtonHandler = () => {
-    if (currentChunkIndex !== null) {
-      // requestNewUpload();
-      if (isUploading) {
-        setIsUploading(false);
-        setBtnTitle("Resume");
-      } else {
-        setIsUploading(true);
-        setBtnTitle("Pause");
-      }
+    if (files.length > 0) {
+      setIsUploading(!isUploading);
     }
   };
+
+  useEffect(() => {
+    if (isUploading) {
+      requestNewUpload(currentFileIndex);
+      setBtnTitle("Pause");
+    } else {
+      setBtnTitle(currentFileIndex === 0 ? "Upload" : "Resume");
+    }
+  }, [isUploading]);
 
   //get user's online statues
   const updateOnlineStatus = () => {
