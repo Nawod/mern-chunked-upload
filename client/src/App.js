@@ -30,7 +30,7 @@ function App() {
       "http://104.154.225.244:4001/upload-request?" + params.toString();
 
     axios
-      .post(url, file, { headers })
+      .get(url, file, { headers })
       .then((res) => {
         console.log("from upload request", res.data);
         const fileId = res.data.fileId;
@@ -187,7 +187,7 @@ function App() {
       requestNewUpload(currentFileIndex);
       setBtnTitle("Pause");
     } else {
-      setBtnTitle(currentFileIndex === 0 ? "Upload" : "Resume");
+      setBtnTitle(currentFileIndex > 0  ? "Resume" : "Upload");
     }
   }, [isUploading]);
 

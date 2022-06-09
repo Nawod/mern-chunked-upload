@@ -4,15 +4,15 @@ import cors from "cors";
 import fs from "fs";
 import md5 from "md5";
 
-// const chunkSize = 6000000;
-const chunkSize = 50120;
+const chunkSize = 6000000;
+// const chunkSize = 50120;
 const fileList = [];
 const app = express();
 app.use(bodyParser.raw({ type: "application/octet-stream", limit: "100mb" }));
 app.use(
   cors({
-    // origin: "http://104.154.225.244:4002",
-    origin: "http://localhost:4002",
+    origin: "http://104.154.225.244:4002",
+    // origin: "http://localhost:4002",
   })
 );
 app.use("/uploads", express.static("uploads"));
@@ -36,7 +36,7 @@ const getExistedChunks = (filePath) => {
 };
 
 //create new file path and generate unique id for new upload request
-app.post("/upload-request", (req, res) => {
+app.get("/upload-request", (req, res) => {
   const { name, projectId } = req.query;
   const fileId = generateUniqueId(name, projectId);
   const tempFilePath = getTempFilePath(name, fileId);
