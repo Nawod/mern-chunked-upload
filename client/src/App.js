@@ -30,7 +30,7 @@ function App() {
       "http://104.154.225.244:4001/upload-request?" + params.toString();
 
     axios
-      .get(url, file, { headers })
+      .get(url,{ headers })
       .then((res) => {
         console.log("from upload request", res.data);
         const fileId = res.data.fileId;
