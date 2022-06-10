@@ -24,13 +24,14 @@ function App() {
     const params = new URLSearchParams();
     params.set("name", file.name);
     params.set("projectId", projectId);
+    params.set("chunkSize", chunkSize);
 
     const headers = { "Content-Type": "application/octet-stream" };
     const url =
       "http://104.154.225.244:4001/upload-request?" + params.toString();
 
     axios
-      .get(url,{ headers })
+      .get(url, { headers })
       .then((res) => {
         console.log("from upload request", res.data);
         const fileId = res.data.fileId;
@@ -100,6 +101,7 @@ function App() {
     params.set("fileId", fileId);
     params.set("currentChunkIndex", existedChunks);
     params.set("totalChunks", Math.ceil(file.size / chunkSize));
+    params.set("chunkSize", chunkSize);
 
     const headers = { "Content-Type": "application/octet-stream" };
     const url = "http://104.154.225.244:4001/upload?" + params.toString();
@@ -187,7 +189,7 @@ function App() {
       requestNewUpload(currentFileIndex);
       setBtnTitle("Pause");
     } else {
-      setBtnTitle(currentFileIndex > 0  ? "Resume" : "Upload");
+      setBtnTitle(currentFileIndex > 0 ? "Resume" : "Upload");
     }
   }, [isUploading]);
 
