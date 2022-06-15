@@ -21,9 +21,9 @@ const getTempFilePath = (name, fileId) => {
 };
 
 //generate unique id for file uploading
-const generateUniqueId = (name, projectId) => {
+const generateUniqueId = (name, taskId) => {
   name.split(".").pop();
-  const uniqueId = md5(projectId + name);
+  const uniqueId = md5(taskId + name);
   return uniqueId;
 };
 //get uploaded chunks size
@@ -35,8 +35,8 @@ const getExistedChunks = (filePath, chunkSize) => {
 
 //create new file path and generate unique id for new upload request
 app.get("/upload-request", (req, res) => {
-  const { name, projectId, chunkSize } = req.query;
-  const fileId = generateUniqueId(name, projectId);
+  const { name, taskId, chunkSize } = req.query;
+  const fileId = generateUniqueId(name, taskId);
   const tempFilePath = getTempFilePath(name, fileId);
 
   if (fs.existsSync(tempFilePath)) {
