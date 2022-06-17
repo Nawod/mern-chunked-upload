@@ -35,7 +35,7 @@ const getExistedChunks = (filePath, chunkSize) => {
 
 //create new file path and generate unique id for new upload request
 app.get("/upload-request", (req, res) => {
-  const { name, taskId, chunkSize } = req.query;
+  const { name, taskId, chunkSize, currentFileIndex } = req.query;
   const fileId = generateUniqueId(name, taskId);
   const tempFilePath = getTempFilePath(name, fileId);
 
@@ -44,7 +44,7 @@ app.get("/upload-request", (req, res) => {
     res
       .status(200)
       .json({ exists: true, existedChunks: existedChunks, fileId: fileId });
-    console.log("file already existed! fileId : ", fileId);
+    console.log("file ", currentFileIndex + 1, " already existed! fileId : ", fileId);
   } else {
     fs.createWriteStream(tempFilePath, {
       flags: "w",
@@ -55,7 +55,7 @@ app.get("/upload-request", (req, res) => {
 });
 
 app.post("/upload", (req, res) => {
-  const { name, currentChunkIndex, totalChunks, fileId, chunkSize } = req.query;
+  const { name, currentChunkIndex, totalChunks, fileId, chunkSize, currentFileIndex } = req.query;
   console.log("current recived chunk : ", currentChunkIndex, " for FileID : ", fileId);
 
   const tmpFilename = getTempFilePath(name, fileId);
@@ -67,7 +67,7 @@ app.post("/upload", (req, res) => {
   fs.appendFileSync(tmpFilename, buffer);
   if (lastChunk) {
     res.status(200).json({ completed: true });
-    console.log("file upload completed! fileId : ", fileId);
+    console.log("file ", currentFileIndex + 1, " upload completed! fileId : ", fileId);
   } else {
     res
       .status(200)
