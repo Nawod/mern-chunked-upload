@@ -9,8 +9,8 @@ const app = express();
 app.use(bodyParser.raw({ type: "application/octet-stream", limit: "100mb" }));
 app.use(
   cors({
-    // origin: "http://104.154.225.244:4002",
-    origin: "http://localhost:4200",
+    origin: "http://104.154.225.244:4200",
+    // origin: "http://localhost:4200",
   })
 );
 app.use("/uploads", express.static("uploads"));
