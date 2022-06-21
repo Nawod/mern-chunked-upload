@@ -44,7 +44,7 @@ app.get("/upload-request", (req, res) => {
     res
       .status(200)
       .json({ exists: true, existedChunks: existedChunks, fileId: fileId });
-    console.log("file ", currentFileIndex + 1, " already existed! fileId : ", fileId);
+    console.log("file ", currentFileIndex, " already existed! fileId : ", fileId);
   } else {
     fs.createWriteStream(tempFilePath, {
       flags: "w",
@@ -67,7 +67,7 @@ app.post("/upload", (req, res) => {
   fs.appendFileSync(tmpFilename, buffer);
   if (lastChunk) {
     res.status(200).json({ completed: true });
-    console.log("file ", currentFileIndex + 1, " upload completed! fileId : ", fileId);
+    console.log("file ", currentFileIndex, " upload completed! fileId : ", fileId);
   } else {
     res
       .status(200)
